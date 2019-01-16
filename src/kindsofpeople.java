@@ -1,106 +1,112 @@
+import java.util.LinkedList;
 import java.util.Scanner;
-import java.util.Arrays;
+import java.util.Queue;
 
 public class kindsofpeople {
 
     private static int n_rows;
     private static int n_cols;
     private static char[][] m;
+    private static int[][] sections;
     private static int n_query;
     private static int[][] query_array;
+    private static int section;
+    private static int[] dirX = {-1, 1, 0, 0};
+    private static int[] dirY = {0, 0, -1, 1};
     private static Scanner sc;
-    private static int[][] visited;
 
 
     public static void main(String[] args) {
+
+
         sc = new Scanner(System.in);
         parse();
+        section = 1;
         for (int i = 0; i < n_query; i++) {
             match(query_array[i]);
-            for (int[] row: visited) {
-                Arrays.fill(row, 0);
-            }
-
         }
     }
 
 
     private static void match(int[] query) {
-        int x1 = query[0];
-        int y1 = query[1];
-        int x2 = query[2];
-        int y2 = query[3];
+        int x1 = query[0] - 1;
+        int y1 = query[1] - 1;
+        int x2 = query[2] - 1;
+        int y2 = query[3] - 1;
 
         if (m[x1][y1] != m[x2][y2]) {
             System.out.println("neither");
-            return;
         }
         else {
-            int type = m[x1][y1];
-            if (path(x1, y1, x2, y2)) {
-                System.out.println(type == '1' ? "decimal" : "binary");
+            if (sections[x1][y1] == 0 && sections[x2][y2] == 0) {
+                flood(new Point2(x1, y1));
             }
-            else {
+
+            if ((sections[x1][y1] != sections[x2][y2])) {
                 System.out.println("neither");
+            } else {
+                System.out.println(m[x1][y1] == '1' ? "decimal" : "binary");
             }
         }
 
     }
 
-    private static boolean path(int x1, int y1, int x2, int y2) {
-        if (x1 == x2 && y1 == y2) {
-            return true;
-        }
-        if(visited[x1][y1] == 1) {
-            return false;
-        }
-        char type = m [x1][y1];
+    private static void flood(Point2 start) {
+        Queue<Point2> q = new LinkedList<>();
 
+        q.add(start);
 
+        char type = m[start.x][start.y];
+        sections[start.x][start.y] = section;
+        int x1, y1;
 
-        boolean res = false;
-        visited[x1][y1] = 1;
-        if (m[(x1 + 1)][y1] == type) {
-            res = res || path((x1 + 1), y1, x2, y2);
+        while (!q.isEmpty()) {
+            Point2 p = q.remove();
+            x1 = p.x;
+            y1 = p.y;
+            for (int dir = 0; dir < 4; dir++) {
+                int nx = x1 + dirX[dir];
+                int ny = y1 + dirY[dir];
+                if (legal_pos(nx, ny) && m[nx][ny] == type && sections[nx][ny] != section) {
+                    q.add(new Point2(nx, ny));
+                    sections[nx][ny] = section;
+                }
+            }
         }
-        if (m[(x1 - 1)][y1] == type) {
-            res = res || path((x1 - 1), y1, x2, y2);
-        }
-        if (m[x1][(y1 + 1)] == type) {
-            res = res || path(x1, (y1 + 1), x2, y2);
-        }
-        if (m[x1][(y1 - 1)] == type) {
-            res = res || path(x1, (y1 - 1), x2, y2);
-        }
-        return res;
+        section++;
+    }
+
+    private static boolean legal_pos(int row, int col) {
+        return (row >= 0 && row < n_rows && col >= 0 && col < n_cols);
 
     }
+
     private static void parse() {
         n_rows = sc.nextInt();
         n_cols = sc.nextInt();
-        m = new char[n_rows + 2][n_cols + 2];
-        visited = new int[n_rows + 2][n_cols + 2];
+        m = new char[n_rows][n_cols];
+        sections = new int[n_rows][n_cols];
 
-        for (int i = 0; i < n_cols + 2; i++) {
-            m[0][i] = '2';
-            m[n_rows + 1][i] = '2';
-        }
-        for (int i = 1; i < n_rows + 1; i ++) {
-            m[i][0] = 2;
-            m[i][n_cols + 1] = '2';
-            String line = sc.next();
-            for (int j = 1; j < n_cols + 1; j++){
-                m[i][j] = line.charAt(j - 1);
-            }
+        for (int i = 0; i < n_rows; i++) {
+            m[i] = sc.next().toCharArray();
         }
         n_query = sc.nextInt();
-        query_array = new int[n_query ][4];
+        query_array = new int[n_query][4];
         for (int i = 0; i < n_query; i++) {
             query_array[i][0] = sc.nextInt();
             query_array[i][1] = sc.nextInt();
             query_array[i][2] = sc.nextInt();
             query_array[i][3] = sc.nextInt();
         }
-  }
+    }
 
+}
+class Point2 {
+
+    int x, y;
+
+    Point2(int a, int b) {
+        x = a;
+        y = b;
+    }
 }
